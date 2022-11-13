@@ -3,6 +3,7 @@
 
 #include "DoorComponent.h"
 #include "BaseDoors.h"
+#include "DoorKey.h"
 #include "PlayerActionsInterface.h"
 #include "AIActionsInterface.h"
 
@@ -14,8 +15,9 @@ UDoorComponent::UDoorComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	bCanBeInteractedWith = false;
-		
+	bCanTeleport = false;
 	numActorsUsing = 0;
+	bUnlocked = true;
 	
 	// ...
 }
@@ -26,7 +28,8 @@ void UDoorComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	if (Key)
+		Key->KeyPickedUp.AddDynamic(this, &UDoorComponent::UnlockDoor);
 	
 }
 
@@ -87,8 +90,9 @@ void UDoorComponent::InteractionAreaExited(AActor* OtherActor)
 	{
 		if (DoorType == EDoorType::EDT_PlayerDoor || DoorType == EDoorType::EDT_UniversalDoor)
 		{
-			if (OtherActor->Implements<UPlayerActionsInterface>())
+			if (OtherActor->Implements<UPlayerActionsInterface>()) {
 				bCanBeInteractedWith = false;
+			}
 		}
 		if (DoorType == EDoorType::EDT_AIDoor || DoorType == EDoorType::EDT_UniversalDoor)
 		{
@@ -152,6 +156,8 @@ void UDoorComponent::AIInteracted()
 		{
 			if (!(Owner->bIsBusy))
 			{
+				if(DoorFunction == EDoorFunction::EDF_Teleporting)
+					bCanTeleport = false;
 				CloseDoorMsg.Broadcast();
 			}
 		}
@@ -161,6 +167,8 @@ void UDoorComponent::AIInteracted()
 		//numActorsUsing++;
 		if (!(Owner->bIsBusy))
 		{
+			if (DoorFunction == EDoorFunction::EDF_Teleporting)
+				bCanTeleport = true;
 			OpenDoorMsg.Broadcast();
 		}
 	}
@@ -174,6 +182,8 @@ void UDoorComponent::PlayerInteracted()
 		{
 			if (!(Owner->bIsBusy))
 			{
+				if (DoorFunction == EDoorFunction::EDF_Teleporting)
+					bCanTeleport = false;
 				CloseDoorMsg.Broadcast();
 			}
 		}
@@ -181,10 +191,40 @@ void UDoorComponent::PlayerInteracted()
 		{
 			if (!(Owner->bIsBusy))
 			{
+				if (DoorFunction == EDoorFunction::EDF_Teleporting)
+					bCanTeleport = true;
 				OpenDoorMsg.Broadcast();
 			}
 		}
 	}
+}
+
+void UDoorComponent::TeleportTriggered(AActor* ActorToTeleport)
+{
+	FVector LocationToTeleport;
+	if (bGetTeleportLocationAtRuntime) 
+	{
+		if (ActorToTeleport->Implements<UPlayerActionsInterface>())
+		{
+			LocationToTeleport = IPlayerActionsInterface::Execute_GetLocationToTeleportTo(ActorToTeleport);
+		}
+		else if(ActorToTeleport->Implements<UAIActionsInterface>())
+		{
+			LocationToTeleport = IAIActionsInterface::Execute_GetLocationToTeleportTo(ActorToTeleport);
+		}
+	}
+	else if (OtherDoor)
+	{
+		OtherDoor->DoorComponent->OpenDoorMsg;
+		LocationToTeleport = OtherDoor->GetActorLocation();
+	}
+	else
+	{
+		LocationToTeleport = TeleportingLocation;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("YEEEET"))
+	ActorToTeleport->SetActorLocation(LocationToTeleport);
+	bCanTeleport = false;
 }
 
 bool UDoorComponent::OpenBasedOnAIDestination(FVector Destination, FVector ActorLocation)
@@ -194,5 +234,10 @@ bool UDoorComponent::OpenBasedOnAIDestination(FVector Destination, FVector Actor
 
 	return (((Destination - point1).Size() < (Destination - point2).Size()) != ((ActorLocation - point1).Size() > (ActorLocation - point2).Size()));
 
+}
+
+void UDoorComponent::UnlockDoor()
+{
+	bUnlocked = true;
 }
 

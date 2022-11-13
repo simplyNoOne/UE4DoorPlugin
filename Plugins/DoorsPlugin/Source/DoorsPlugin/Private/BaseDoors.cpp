@@ -4,7 +4,10 @@
 #include "BaseDoors.h"
 #include "DoorComponent.h"
 #include "DoorKey.h"
+#include "PlayerActionsInterface.h"
+#include "AIActionsInterface.h"
 #include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 
 // Sets default values
@@ -33,22 +36,27 @@ ABaseDoors::ABaseDoors()
 
 	Point1 = CreateDefaultSubobject< USceneComponent>("RefPoint1");
 	Point1->SetupAttachment(GetRootComponent());
+	Point1->SetRelativeLocation(FVector(0.f, 50.f, 0.f));
 	Point2 = CreateDefaultSubobject< USceneComponent>("RefPoint2");
 	Point2->SetupAttachment(GetRootComponent());
+	Point2->SetRelativeLocation(FVector(0.f, -50.f, 0.f));
+
+	TeleportTrigger = CreateDefaultSubobject<USphereComponent>("TeleportingTrigger");
+	TeleportTrigger->SetupAttachment(GetRootComponent());
+	TeleportTrigger->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	TeleportTrigger->SetSphereRadius(10.f);
 
 	AINavProxy = CreateDefaultSubobject<UChildActorComponent>("NavProxy");
+	AINavProxy->SetupAttachment(GetRootComponent());
 
 	DoorComponent = CreateDefaultSubobject<UDoorComponent>("DoorComponent");
-	DoorComponent->Side1 = Side1->GetComponentLocation();
-	DoorComponent->Side2 = Side2->GetComponentLocation();
 	DoorComponent->Owner = this;
-
 
 
 	bIsOpen = false;
 	bIsBusy = false;
 
-	bUnlocked = true;
+	//bUnlocked = true;
 
 }
 
@@ -63,17 +71,17 @@ void ABaseDoors::BeginPlay()
 	DoorComponent->OpenDoorMsg.AddDynamic(this, &ABaseDoors::OpenDoor);
 	DoorComponent->CloseDoorMsg.AddDynamic(this, &ABaseDoors::CloseDoor);
 
-	if(Key)
-		Key->KeyPickedUp.AddDynamic(this, &ABaseDoors::UnlockDoor);
+	Side1->OnComponentBeginOverlap.AddDynamic(this, &ABaseDoors::Side1Overlapped);
+	Side2->OnComponentBeginOverlap.AddDynamic(this, &ABaseDoors::Side2Overlapped);
 
-	
+	TeleportTrigger->OnComponentBeginOverlap.AddDynamic(this, &ABaseDoors::TeleportOverlapped);
+
 }
 
 void ABaseDoors::InteractionAreaEntered(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (bUnlocked)
+	if (DoorComponent -> bUnlocked)
 	{
-		
 			DoorComponent->InteractionAreaEntered(OtherActor);
 	}
 		
@@ -82,17 +90,11 @@ void ABaseDoors::InteractionAreaEntered(UPrimitiveComponent* OverlappedComp, AAc
 
 void ABaseDoors::InteractionAreaExited(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (bUnlocked)
+	if (DoorComponent-> bUnlocked)
 	{
-		
 			DoorComponent->InteractionAreaExited(OtherActor);
 	}
 		
-}
-
-void ABaseDoors::UnlockDoor()
-{
-	bUnlocked = true;
 }
 
 void ABaseDoors::OpenDoor_Implementation()
@@ -122,6 +124,17 @@ void ABaseDoors::DoorsOpened()
 	bIsBusy = false;
 }
 
+void ABaseDoors::TeleportOverlapped(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (DoorComponent->DoorFunction == EDoorFunction::EDF_Teleporting) 
+	{
+		if(OtherActor->Implements<UAIActionsInterface>() || OtherActor->Implements<UPlayerActionsInterface>())
+		UE_LOG(LogTemp, Warning, TEXT("TELEPORT OVERLAPPED"))
+		if (DoorComponent->bCanTeleport)
+			DoorComponent->TeleportTriggered(OtherActor);
+	}
+}
+
 // Called every frame
 void ABaseDoors::Tick(float DeltaTime)
 {
@@ -134,3 +147,17 @@ bool ABaseDoors::IsOpen()
 	return bIsOpen;
 }
 
+void ABaseDoors::Side1Overlapped(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor->Implements<UAIActionsInterface>() || OtherActor->Implements<UPlayerActionsInterface>())
+		Side1Entered(OtherActor);
+}
+
+void ABaseDoors::Side2Overlapped(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor->Implements<UAIActionsInterface>() || OtherActor->Implements<UPlayerActionsInterface>())
+		Side2Entered(OtherActor);
+}
+
+void ABaseDoors::Side1Entered_Implementation(AActor* Actor) {}
+void ABaseDoors::Side2Entered_Implementation(AActor* Actor) {}

@@ -6,7 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "DoorComponent.generated.h"
 
-
+class ABaseDoors;
+class ADoorKey;
 
 UENUM(BlueprintType)
 enum class EDoorType : uint8
@@ -68,12 +69,16 @@ public:
 	UPROPERTY(EditAnywhere, Category = "TeleportingDoor")
 	bool bGetTeleportLocationAtRuntime;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DoorData")
+	bool bUnlocked;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "DoorData")
+	ADoorKey* Key;
+
 
 	ABaseDoors* Owner;
 
-
-	FVector Side1;
-	FVector Side2;
+	bool bCanTeleport;
 
 	bool bCanBeInteractedWith;
 
@@ -89,6 +94,9 @@ protected:
 
 	bool OpenBasedOnAIDestination(FVector Destination, FVector ActorLocation);
 
+	UFUNCTION()
+	void UnlockDoor();
+
 	
 
 public:	
@@ -103,5 +111,7 @@ public:
 
 	void AIInteracted();
 	void PlayerInteracted();
+
+	void TeleportTriggered(AActor* ActorToTeleport);
 		
 };

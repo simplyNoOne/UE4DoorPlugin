@@ -9,6 +9,7 @@
 class UStaticMeshComponent;
 class UChildActorComponent;
 class UBoxComponent;
+class USphereComponent;
 class UDoorComponent;
 class ADoorKey;
 
@@ -32,6 +33,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Physical")
 	UBoxComponent* Side2;
 
+	UPROPERTY()
+	USphereComponent* TeleportTrigger;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Physical")
 	UBoxComponent* InteractionArea;
@@ -39,25 +42,23 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "DoorFunctionality")
 	UChildActorComponent* AINavProxy;
 
-	UPROPERTY(VisibleAnywhere, Category = "DoorFunctionality")
-	UDoorComponent* DoorComponent;
+	
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "DoorFunctionality")
-	bool bUnlocked;
-
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "DoorFunctionality")
-	ADoorKey* Key;
 
 	
 public:	
 	// Sets default values for this actor's properties
 	ABaseDoors();
 
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "DoorFunctionality")
+	UDoorComponent* DoorComponent;
+
 	UPROPERTY()
 	USceneComponent* Point1;
 
 	UPROPERTY()
 	USceneComponent* Point2;
+
 
 	bool bIsOpen;
 	bool bIsBusy;
@@ -72,8 +73,6 @@ protected:
 	UFUNCTION()
 	void InteractionAreaExited(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	UFUNCTION()
-	void UnlockDoor();
 
 	UFUNCTION(BlueprintNativeEvent, Category = "CustomEvents")
 	void OpenDoor();
@@ -89,6 +88,22 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "CustomEvents")
 	void DoorsOpened();
+
+
+	UFUNCTION()
+	void Side2Overlapped(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	UFUNCTION()
+	void Side1Overlapped(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION(BlueprintNativeEvent, Category = "CustomEvents")
+	void Side1Entered(AActor* Actor);
+
+	UFUNCTION(BlueprintNativeEvent, Category = "CustomEvents")
+	void Side2Entered(AActor* Actor);
+
+	UFUNCTION()
+	void TeleportOverlapped(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 public:	
 	// Called every frame
