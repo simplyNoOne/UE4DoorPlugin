@@ -66,5 +66,8 @@
 			"Name": "CodeLiteSourceCodeAccess",
 			"Enabled": false
 		}
+	],
+	"TargetPlatforms": [
+		"WindowsNoEditor"
 	]
 }

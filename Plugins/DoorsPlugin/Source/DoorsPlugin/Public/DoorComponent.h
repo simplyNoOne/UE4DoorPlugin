@@ -72,8 +72,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DoorData")
 	bool bUnlocked;
 
+	
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "DoorData")
-	ADoorKey* Key;
+	TArray<ADoorKey*> Keys;
 
 
 	ABaseDoors* Owner;
@@ -81,6 +82,8 @@ public:
 	bool bCanTeleport;
 
 	bool bCanBeInteractedWith;
+
+	bool bWasJustTeleportedTo;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "DoorData")
@@ -95,7 +98,7 @@ protected:
 	bool OpenBasedOnAIDestination(FVector Destination, FVector ActorLocation);
 
 	UFUNCTION()
-	void UnlockDoor();
+	void KeyCollected(ADoorKey* Key);
 
 	
 
@@ -109,9 +112,11 @@ public:
 	void OpenAutomaticDoor();
 	void CloseAutomaticDoor();
 
-	void AIInteracted();
+	void AIInteracted(bool open);
 	void PlayerInteracted();
 
 	void TeleportTriggered(AActor* ActorToTeleport);
+
+	void DoorActionFinished();
 		
 };

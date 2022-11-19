@@ -41,10 +41,13 @@ ABaseDoors::ABaseDoors()
 	Point2->SetupAttachment(GetRootComponent());
 	Point2->SetRelativeLocation(FVector(0.f, -50.f, 0.f));
 
-	TeleportTrigger = CreateDefaultSubobject<USphereComponent>("TeleportingTrigger");
-	TeleportTrigger->SetupAttachment(GetRootComponent());
-	TeleportTrigger->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
-	TeleportTrigger->SetSphereRadius(10.f);
+	LocationToTeleportActor = CreateDefaultSubobject<USceneComponent>("PointToTeleportTo");
+	LocationToTeleportActor->SetupAttachment(GetRootComponent());
+
+	TeleportingTrigger = CreateDefaultSubobject<UBoxComponent>("TeleportTrigger");
+	TeleportingTrigger->SetupAttachment(GetRootComponent());
+	TeleportingTrigger->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
+	TeleportingTrigger->SetBoxExtent(FVector(10, 20, 100));
 
 	AINavProxy = CreateDefaultSubobject<UChildActorComponent>("NavProxy");
 	AINavProxy->SetupAttachment(GetRootComponent());
@@ -74,12 +77,14 @@ void ABaseDoors::BeginPlay()
 	Side1->OnComponentBeginOverlap.AddDynamic(this, &ABaseDoors::Side1Overlapped);
 	Side2->OnComponentBeginOverlap.AddDynamic(this, &ABaseDoors::Side2Overlapped);
 
-	TeleportTrigger->OnComponentBeginOverlap.AddDynamic(this, &ABaseDoors::TeleportOverlapped);
+	TeleportingTrigger->OnComponentBeginOverlap.AddDynamic(this, &ABaseDoors::OnTeleportOverlapped);
 
 }
 
 void ABaseDoors::InteractionAreaEntered(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (OtherActor->IsA(ABaseDoors::StaticClass()))
+		return;
 	if (DoorComponent -> bUnlocked)
 	{
 			DoorComponent->InteractionAreaEntered(OtherActor);
@@ -90,6 +95,8 @@ void ABaseDoors::InteractionAreaEntered(UPrimitiveComponent* OverlappedComp, AAc
 
 void ABaseDoors::InteractionAreaExited(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	if (OtherActor->IsA(ABaseDoors::StaticClass()))
+		return;
 	if (DoorComponent-> bUnlocked)
 	{
 			DoorComponent->InteractionAreaExited(OtherActor);
@@ -122,16 +129,18 @@ void ABaseDoors::DoorsOpened()
 {
 	bIsOpen = true;
 	bIsBusy = false;
+	DoorComponent->DoorActionFinished();
 }
 
-void ABaseDoors::TeleportOverlapped(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ABaseDoors::OnTeleportOverlapped(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (DoorComponent->DoorFunction == EDoorFunction::EDF_Teleporting) 
 	{
-		if(OtherActor->Implements<UAIActionsInterface>() || OtherActor->Implements<UPlayerActionsInterface>())
-		UE_LOG(LogTemp, Warning, TEXT("TELEPORT OVERLAPPED"))
-		if (DoorComponent->bCanTeleport)
-			DoorComponent->TeleportTriggered(OtherActor);
+		if (OtherActor->Implements<UAIActionsInterface>() || OtherActor->Implements<UPlayerActionsInterface>()) {
+			UE_LOG(LogTemp, Warning, TEXT("TELEPORT OVERLAPPED"))
+			if (DoorComponent->bCanTeleport)
+				DoorComponent->TeleportTriggered(OtherActor);
+		}
 	}
 }
 

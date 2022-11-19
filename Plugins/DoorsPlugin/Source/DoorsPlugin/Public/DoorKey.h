@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "DoorKey.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FKeyPickedUp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FKeyPickedUp, ADoorKey*, Key);
 
 UCLASS()
 class DOORSPLUGIN_API ADoorKey : public AActor

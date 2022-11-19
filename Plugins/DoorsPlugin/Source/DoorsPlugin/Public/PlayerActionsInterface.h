@@ -26,4 +26,8 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	FVector GetLocationToTeleportTo();
+
+
+	UFUNCTION(BlueprintNativeEvent)
+	FTransform GetTransformToTeleportTo();
 };

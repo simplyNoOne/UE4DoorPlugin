@@ -33,11 +33,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Physical")
 	UBoxComponent* Side2;
 
-	UPROPERTY()
-	USphereComponent* TeleportTrigger;
+	UPROPERTY(EditDefaultsOnly, Category = "Physical")
+	UBoxComponent* TeleportingTrigger;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Physical")
 	UBoxComponent* InteractionArea;
+
 
 	UPROPERTY(VisibleAnywhere, Category = "DoorFunctionality")
 	UChildActorComponent* AINavProxy;
@@ -59,6 +60,10 @@ public:
 	UPROPERTY()
 	USceneComponent* Point2;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Physical")
+	USceneComponent* LocationToTeleportActor;
+
+	
 
 	bool bIsOpen;
 	bool bIsBusy;
@@ -103,7 +108,7 @@ protected:
 	void Side2Entered(AActor* Actor);
 
 	UFUNCTION()
-	void TeleportOverlapped(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnTeleportOverlapped(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 public:	
 	// Called every frame

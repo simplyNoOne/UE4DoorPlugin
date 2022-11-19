@@ -27,7 +27,7 @@ void ADoorKey::Tick(float DeltaTime)
 
 void ADoorKey::Interacted()
 {
-	KeyPickedUp.Broadcast();
+	KeyPickedUp.Broadcast(this);
 	this->Destroy();
 }
 
