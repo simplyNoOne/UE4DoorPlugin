@@ -23,11 +23,9 @@ class DOORSPLUGIN_API IPlayerActionsInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 
-
-	UFUNCTION(BlueprintNativeEvent)
-	FVector GetLocationToTeleportTo();
-
-
 	UFUNCTION(BlueprintNativeEvent)
 	FTransform GetTransformToTeleportTo();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void PlayerActorTeleported();
 };

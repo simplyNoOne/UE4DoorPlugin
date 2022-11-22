@@ -34,6 +34,11 @@ ABaseDoors::ABaseDoors()
 	InteractionArea = CreateDefaultSubobject<UBoxComponent>("InteractionArea");
 	InteractionArea->SetupAttachment(GetRootComponent());
 
+	AdditionalAIInteractionTrigger = CreateDefaultSubobject<UBoxComponent>("AIInteractionTrigger");
+	AdditionalAIInteractionTrigger->SetupAttachment(InteractionArea);
+	AdditionalAIInteractionTrigger->SetBoxExtent(FVector(30, 10, 100));
+
+
 	Point1 = CreateDefaultSubobject< USceneComponent>("RefPoint1");
 	Point1->SetupAttachment(GetRootComponent());
 	Point1->SetRelativeLocation(FVector(0.f, 50.f, 0.f));
@@ -47,7 +52,7 @@ ABaseDoors::ABaseDoors()
 	TeleportingTrigger = CreateDefaultSubobject<UBoxComponent>("TeleportTrigger");
 	TeleportingTrigger->SetupAttachment(GetRootComponent());
 	TeleportingTrigger->SetRelativeLocation(FVector(0.f, 0.f, 100.f));
-	TeleportingTrigger->SetBoxExtent(FVector(10, 20, 100));
+	TeleportingTrigger->SetBoxExtent(FVector(20, 1, 100));
 
 	AINavProxy = CreateDefaultSubobject<UChildActorComponent>("NavProxy");
 	AINavProxy->SetupAttachment(GetRootComponent());
@@ -70,6 +75,7 @@ void ABaseDoors::BeginPlay()
 
 	InteractionArea->OnComponentBeginOverlap.AddDynamic(this, &ABaseDoors::InteractionAreaEntered);
 	InteractionArea->OnComponentEndOverlap.AddDynamic(this, &ABaseDoors::InteractionAreaExited);
+	AdditionalAIInteractionTrigger->OnComponentBeginOverlap.AddDynamic(this, &ABaseDoors::AdditionalTriggerEntered);
 
 	DoorComponent->OpenDoorMsg.AddDynamic(this, &ABaseDoors::OpenDoor);
 	DoorComponent->CloseDoorMsg.AddDynamic(this, &ABaseDoors::CloseDoor);
@@ -83,6 +89,8 @@ void ABaseDoors::BeginPlay()
 
 void ABaseDoors::InteractionAreaEntered(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (DoorComponent->ActorsInProximity.Contains(OtherActor))
+		return;
 	if (OtherActor->IsA(ABaseDoors::StaticClass()))
 		return;
 	if (DoorComponent -> bUnlocked)
@@ -95,6 +103,8 @@ void ABaseDoors::InteractionAreaEntered(UPrimitiveComponent* OverlappedComp, AAc
 
 void ABaseDoors::InteractionAreaExited(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	if (!DoorComponent->ActorsInProximity.Contains(OtherActor))
+		return;
 	if (OtherActor->IsA(ABaseDoors::StaticClass()))
 		return;
 	if (DoorComponent-> bUnlocked)
@@ -102,6 +112,16 @@ void ABaseDoors::InteractionAreaExited(UPrimitiveComponent* OverlappedComp, AAct
 			DoorComponent->InteractionAreaExited(OtherActor);
 	}
 		
+}
+
+void ABaseDoors::AdditionalTriggerEntered(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (DoorComponent->bShouldDoubleCheck) {
+		if (OtherActor->Implements<UAIActionsInterface>()) {
+			DoorComponent->bShouldDoubleCheck = false;
+			InteractionAreaEntered(OverlappedComp, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
+		}
+	}
 }
 
 void ABaseDoors::OpenDoor_Implementation()
@@ -114,9 +134,10 @@ void ABaseDoors::CloseDoor_Implementation()
 	bIsBusy = true;
 }
 
-void ABaseDoors::DoorsInteracted()
+
+void ABaseDoors::DoorsInteracted(AActor* InteractingActor)
 {
-	DoorComponent->PlayerInteracted();
+	DoorComponent->PlayerInteracted(InteractingActor);
 }
 
 void ABaseDoors::DoorsClosed()

@@ -39,6 +39,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Physical")
 	UBoxComponent* InteractionArea;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Physical")
+	UBoxComponent* AdditionalAIInteractionTrigger;
+
 
 	UPROPERTY(VisibleAnywhere, Category = "DoorFunctionality")
 	UChildActorComponent* AINavProxy;
@@ -68,6 +71,7 @@ public:
 	bool bIsOpen;
 	bool bIsBusy;
 
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -78,6 +82,9 @@ protected:
 	UFUNCTION()
 	void InteractionAreaExited(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void AdditionalTriggerEntered(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 
 	UFUNCTION(BlueprintNativeEvent, Category = "CustomEvents")
 	void OpenDoor();
@@ -86,7 +93,7 @@ protected:
 	void CloseDoor();
 
 	UFUNCTION(BlueprintCallable, Category = "CustomEvents")
-	void DoorsInteracted();
+	void DoorsInteracted(AActor* InteractingActor);
 
 	UFUNCTION(BlueprintCallable, Category = "CustomEvents")
 	void DoorsClosed();

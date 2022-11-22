@@ -31,10 +31,10 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	bool CanAIOpenDoor(ABaseDoors* door);
 
-	UFUNCTION(BlueprintNativeEvent)
-	FVector GetLocationToTeleportTo();
-
-
+	
 	UFUNCTION(BlueprintNativeEvent)
 	FTransform GetTransformToTeleportTo();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void AIActorTeleported();
 };

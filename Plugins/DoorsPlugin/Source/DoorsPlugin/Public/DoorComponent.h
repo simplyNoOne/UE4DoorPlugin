@@ -12,21 +12,21 @@ class ADoorKey;
 UENUM(BlueprintType)
 enum class EDoorType : uint8
 {
+	EDT_DEFAULT UMETA(Display = "Default"),
+
 	EDT_PlayerDoor UMETA(Display = "PlayerDoor"),
 	EDT_AIDoor UMETA(Display = "AIDoor"),
-	EDT_UniversalDoor UMETA(Display = "UniversalDoor"),
-
-	EDT_DEFAULT UMETA(Display = "Default")
+	EDT_UniversalDoor UMETA(Display = "UniversalDoor")
 };
 
 UENUM(BlueprintType)
 enum class EDoorFunction : uint8
 {
+	EDF_DEFAULT UMETA(Display = "Default"),
+
 	EDF_Interactive UMETA(Display = "InteractiveDoor"),
 	EDF_Automatic UMETA(Display = "AutomaticDoor"),
-	EDF_Teleporting UMETA(Display = "TeleportingDoor"),
-
-	EDF_DEFAULT UMETA(Display = "Default")
+	EDF_Teleporting UMETA(Display = "TeleportingDoor")	
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCloseDoor);
@@ -85,6 +85,10 @@ public:
 
 	bool bWasJustTeleportedTo;
 
+	bool bShouldDoubleCheck;
+
+	TArray<AActor*> ActorsInProximity;
+
 protected:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "DoorData")
 	int numActorsUsing;
@@ -113,7 +117,7 @@ public:
 	void CloseAutomaticDoor();
 
 	void AIInteracted(bool open);
-	void PlayerInteracted();
+	void PlayerInteracted(AActor* InteractingActor);
 
 	void TeleportTriggered(AActor* ActorToTeleport);
 
