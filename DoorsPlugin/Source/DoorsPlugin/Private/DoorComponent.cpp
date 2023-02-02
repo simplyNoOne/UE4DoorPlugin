@@ -286,8 +286,9 @@ void UDoorComponent::TeleportTriggered(AActor* ActorToTeleport)
 	
 	
 	ActorToTeleport->SetActorLocation(TransformToTeleport.GetLocation(), false, nullptr, ETeleportType::ResetPhysics);
-	ActorToTeleport->SetActorRotation(TransformToTeleport.GetRotation());
-	if (ActorToTeleport->Implements<UAIActionsInterface>()) {
+	ActorToTeleport->SetActorRotation(TransformToTeleport.GetRotation(), ETeleportType::ResetPhysics);
+	ActorToTeleport->SetActorScale3D(TransformToTeleport.GetScale3D());
+	if (ActorToTeleport->Implements<UAIActionsInterface>()){
 		IAIActionsInterface::Execute_AIActorTeleported(ActorToTeleport);
 	}
 	else {
