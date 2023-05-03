@@ -9,6 +9,16 @@ The Plugin branch consists only of the plugin directory, but may contain not ful
 In order for actors to be able to use the doors, they must implement either playerActionsInterface or AIActionsInterface. In order to have a player interact with doors, DoorsInteracted funcion must be bound to some kind of interaction logic implemented on player character.
 There are two example classes included, but custom classes derived from BaseDoors can be created and modified as well.
 
+The doors have 3 functionalities: 
+- automatic - they open and close based on the proximity of the actor 
+- interactive - they are triggered by interaction from the player bound to DoorsInteracted function, or in case of an AI, either based on the destination of the AI actor, or by a custom condition specified in CanAIOpenDoor function
+- teleporting - they are interacted with the same way as InteractiveDoor, but they transport the player either to a specified location, or to another door
+
+There are also 3 interaction options available:
+- AI only 
+- Player only
+- Universal - both AI actors and Players can interact with such doors
+
 Example door frame and door mesh are also available. (the assets are not made by me)
 
-Work in progress
+
